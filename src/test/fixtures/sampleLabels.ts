@@ -3,6 +3,7 @@ import type { LabelModel } from '../../types'
 export const sampleLabel: LabelModel = {
   id: 'test-1-0',
   rowNumber: 1,
+  nombre: '',
   obra: 'Edificio Test',
   medidas: '600 x 800',
   medidas1: '600',
@@ -15,6 +16,9 @@ export const sampleLabel: LabelModel = {
   observaciones: 'Sin observaciones',
   composicionDVH: '4mm incoloro / 12mm / 4mm incoloro',
   selected: false,
+  tableType: 'dvh',
+  validationStatus: 'valid',
+  validationIssues: [],
 }
 
 export const sampleLabels: LabelModel[] = [
@@ -32,3 +36,24 @@ export const sampleLabels: LabelModel[] = [
     observaciones: '',
   },
 ]
+
+export const sampleSimpleGlassLabel: LabelModel = {
+  id: 'test-sg-1',
+  rowNumber: 33,
+  nombre: 'Dani Sánchez',
+  obra: 'WA07042026',
+  medidas: '961 x 2500',
+  medidas1: '961',
+  medidas2: '2500',
+  cantidad: '1',
+  vidrio1: '10mm',
+  camara: '',
+  vidrio2: '',
+  mts2: '2.40',
+  observaciones: 'MC - Retira Miércoles de tarde',
+  composicionDVH: '10mm',
+  selected: false,
+  tableType: 'simple_glass',
+  validationStatus: 'valid',
+  validationIssues: [],
+}

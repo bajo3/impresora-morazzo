@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { EmptyState } from './components/EmptyState'
 import { ErrorMessage } from './components/ErrorMessage'
+import { ImportSummaryPanel } from './components/ImportSummaryPanel'
 import { LabelPresetSelector } from './components/LabelPresetSelector'
 import { LabelPreviewList } from './components/LabelPreviewList'
 import { SheetSelector } from './components/SheetSelector'
 import { Toolbar } from './components/Toolbar'
 import { UploadPanel } from './components/UploadPanel'
 import { parseWorkbookFile } from './lib/excelParser'
-import type { AppMessage, LabelModel, LabelPresetId, LabelSettings, PrintScope } from './types'
+import type { AppMessage, ImportSummary, LabelModel, LabelPresetId, LabelSettings, PrintScope } from './types'
 import { DEFAULT_LABEL_SETTINGS, getLabelPresetById, LABEL_PRESETS } from './utils/labelSettings'
 import { buildZplForLabels } from './utils/zpl'
 import { sendZplToZebra } from './utils/zebraBrowserPrint'
@@ -21,6 +22,7 @@ function App() {
   const [currentFile, setCurrentFile] = useState<File | null>(null)
   const [sheetNames, setSheetNames] = useState<string[]>([])
   const [selectedSheetName, setSelectedSheetName] = useState<string>('')
+  const [importSummary, setImportSummary] = useState<ImportSummary | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedPresetId, setSelectedPresetId] =
     useState<LabelPresetId>(DEFAULT_LABEL_SETTINGS.id)
@@ -66,12 +68,14 @@ function App() {
       setCurrentFile(file)
       setSheetNames(result.sheetNames)
       setSelectedSheetName(result.selectedSheetName)
+      setImportSummary(result.importSummary)
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : 'No se pudo procesar el archivo seleccionado.'
       setLabels([])
+      setImportSummary(null)
       setErrorMessage(message)
     } finally {
       setIsProcessing(false)
@@ -226,6 +230,8 @@ function App() {
             ))}
           </div>
         ) : null}
+
+        {importSummary ? <ImportSummaryPanel summary={importSummary} /> : null}
       </section>
 
       <section className="workspace">

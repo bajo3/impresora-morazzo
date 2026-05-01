@@ -5,8 +5,18 @@ export interface AppMessage {
   text: string
 }
 
+export type TableType = 'dvh' | 'simple_glass'
+export type LabelStatus = 'valid' | 'warning' | 'error' | 'ignored'
+
+export interface ValidationIssue {
+  field: string
+  code: string
+  message: string
+}
+
 export interface RawLabelRow {
   rowNumber: number
+  nombre: string
   obra: string
   medidas: string
   medidas1: string
@@ -23,11 +33,35 @@ export interface LabelModel extends RawLabelRow {
   id: string
   composicionDVH: string
   selected: boolean
+  tableType: TableType
+  validationStatus: LabelStatus
+  validationIssues: ValidationIssue[]
+}
+
+export interface TableSummary {
+  type: TableType
+  headerRowIndex: number
+  rowsProcessed: number
+  rowsIgnored: number
+  labelsValid: number
+  labelsWithWarnings: number
+  labelsWithErrors: number
+}
+
+export interface ImportSummary {
+  tables: TableSummary[]
+  totalValid: number
+  totalWarnings: number
+  totalErrors: number
+  totalIgnored: number
 }
 
 export interface ParseWorkbookSuccess {
   labels: LabelModel[]
   messages: AppMessage[]
+  sheetNames: string[]
+  selectedSheetName: string
+  importSummary: ImportSummary
 }
 
 export type PrintScope = 'all' | 'selected'
