@@ -1,10 +1,12 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import type { LabelModel } from '../types'
 import type { LabelSettings } from '../types'
+import { buildQRData, renderQRToCanvas } from '../utils/qrGenerator'
 
 interface LabelCardProps {
   label: LabelModel
   settings: LabelSettings
+  showQR: boolean
   hiddenOnPrint: boolean
   onToggleSelection: (id: string, selected: boolean) => void
 }
@@ -30,10 +32,21 @@ function LabelField({ name, value, modifier, fieldClassName }: LabelFieldProps) 
 export function LabelCard({
   label,
   settings,
+  showQR,
   hiddenOnPrint,
   onToggleSelection,
 }: LabelCardProps) {
   const isCompactFormat = settings.id === '80x50'
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = qrCanvasRef.current
+    if (!showQR || !canvas) return
+
+    renderQRToCanvas(canvas, buildQRData(label)).catch(() => {
+      // QR falla silenciosamente — la etiqueta sigue siendo usable
+    })
+  }, [label, showQR])
 
   return (
     <article
@@ -58,9 +71,18 @@ export function LabelCard({
       </label>
 
       <div className="label-print-sheet label-print">
-        <header className="label-card__header">
-          <span className="label-card__eyebrow">Etiqueta de corte</span>
-          <h3 className="label-card__headline">DVH listo para produccion</h3>
+        <header className={`label-card__header ${showQR && !isCompactFormat ? 'label-card__header--with-qr' : ''}`.trim()}>
+          <div className="label-card__header-text">
+            <span className="label-card__eyebrow">Etiqueta de corte</span>
+            <h3 className="label-card__headline">DVH listo para produccion</h3>
+          </div>
+          {showQR && !isCompactFormat && (
+            <canvas
+              ref={qrCanvasRef}
+              className="label-card__qr-canvas"
+              aria-label="Código QR de la etiqueta"
+            />
+          )}
         </header>
 
         <div className="label-card__body">

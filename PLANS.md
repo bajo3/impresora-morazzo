@@ -7,9 +7,21 @@
 
 ---
 
-## Plan pendiente: QR en etiquetas
+## Plan completado: QR en etiquetas ✓
 
-**Dependencia:** `qrcode` (npm install qrcode @types/qrcode)
+**Dependencia:** `qrcode` (instalada)
+
+**Campos pendientes en el QR** (no existen aún en `LabelModel`):
+- `lote` / `orden` — requiere nueva columna en Excel y nuevo campo en `RawLabelRow`
+- `cliente` — requiere nueva columna en Excel y nuevo campo en `RawLabelRow`
+
+Para agregar: seguir el flujo en `.claude/skills/excel-import-mapping.md` → agregar alias en `EXPECTED_COLUMNS`, campo en `RawLabelRow`, y agregar al `buildQRData` en `src/utils/qrGenerator.ts`.
+
+**Nota sobre compact (80x50):** QR no incluido en ZPL compact (sin espacio físico). En la preview tampoco se muestra (el header está oculto en ese modo por CSS).
+
+---
+
+## Plan pendiente: QR — campos adicionales (continuación)
 
 **Archivos a crear/modificar:**
 - `src/utils/qrGenerator.ts` — genera QR como base64 o SVG desde `LabelModel`

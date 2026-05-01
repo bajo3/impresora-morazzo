@@ -4,6 +4,7 @@ import { EmptyState } from './components/EmptyState'
 import { ErrorMessage } from './components/ErrorMessage'
 import { LabelPresetSelector } from './components/LabelPresetSelector'
 import { LabelPreviewList } from './components/LabelPreviewList'
+import { SheetSelector } from './components/SheetSelector'
 import { Toolbar } from './components/Toolbar'
 import { UploadPanel } from './components/UploadPanel'
 import { parseWorkbookFile } from './lib/excelParser'
@@ -17,9 +18,13 @@ function App() {
   const [messages, setMessages] = useState<AppMessage[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string>('')
+  const [currentFile, setCurrentFile] = useState<File | null>(null)
+  const [sheetNames, setSheetNames] = useState<string[]>([])
+  const [selectedSheetName, setSelectedSheetName] = useState<string>('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedPresetId, setSelectedPresetId] =
     useState<LabelPresetId>(DEFAULT_LABEL_SETTINGS.id)
+  const [showQR, setShowQR] = useState(false)
   const printScope: PrintScope = 'all'
   const labelSettings: LabelSettings = useMemo(
     () => getLabelPresetById(selectedPresetId),
@@ -48,31 +53,50 @@ function App() {
     [labels],
   )
 
-  const handleFileChange = async (file: File | null) => {
-    if (!file) {
-      return
-    }
-
+  const loadWorkbookSheet = async (file: File, sheetName?: string) => {
     setIsProcessing(true)
     setErrorMessage(null)
     setMessages([])
 
     try {
-      const result = await parseWorkbookFile(file)
+      const result = await parseWorkbookFile(file, sheetName)
       setLabels(result.labels)
       setMessages(result.messages)
       setFileName(file.name)
+      setCurrentFile(file)
+      setSheetNames(result.sheetNames)
+      setSelectedSheetName(result.selectedSheetName)
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : 'No se pudo procesar el archivo seleccionado.'
       setLabels([])
-      setFileName('')
       setErrorMessage(message)
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleFileChange = async (file: File | null) => {
+    if (!file) {
+      return
+    }
+
+    setFileName(file.name)
+    setCurrentFile(file)
+    setSheetNames([])
+    setSelectedSheetName('')
+    await loadWorkbookSheet(file)
+  }
+
+  const handleSheetChange = async (sheetName: string) => {
+    if (!currentFile) {
+      return
+    }
+
+    setSelectedSheetName(sheetName)
+    await loadWorkbookSheet(currentFile, sheetName)
   }
 
   const updateLabelSelection = (id: string, selected: boolean) => {
@@ -115,7 +139,7 @@ function App() {
     }
 
     setErrorMessage(null)
-    return buildZplForLabels(scopedLabels, labelSettings)
+    return buildZplForLabels(scopedLabels, labelSettings, showQR)
   }
 
   const downloadZpl = (scope: PrintScope) => {
@@ -205,6 +229,13 @@ function App() {
       </section>
 
       <section className="workspace">
+        <SheetSelector
+          sheetNames={sheetNames}
+          selectedSheetName={selectedSheetName}
+          isProcessing={isProcessing}
+          onSelectSheet={handleSheetChange}
+        />
+
         <LabelPresetSelector
           presets={LABEL_PRESETS}
           selectedPresetId={selectedPresetId}
@@ -216,6 +247,8 @@ function App() {
           totalCount={labels.length}
           selectedCount={selectedCount}
           settingsSummary={settingsSummary}
+          showQR={showQR}
+          onToggleQR={() => setShowQR((v) => !v)}
           onSelectAll={() => setAllSelections(true)}
           onClearSelection={() => setAllSelections(false)}
           onPrintAllWithZebra={() => void printWithZebra('all')}
@@ -233,6 +266,7 @@ function App() {
             labels={labels}
             settings={labelSettings}
             printScope={printScope}
+            showQR={showQR}
             onToggleSelection={updateLabelSelection}
           />
         )}

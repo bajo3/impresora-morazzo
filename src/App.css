@@ -273,6 +273,12 @@
   color: var(--heading-color);
 }
 
+.toolbar__button--qr-active {
+  background: rgba(31, 92, 77, 0.1);
+  border-color: rgba(31, 92, 77, 0.3);
+  color: #1f5c4d;
+}
+
 .empty-state {
   padding: 42px 28px;
   text-align: center;
@@ -346,9 +352,29 @@
 }
 
 .label-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin-bottom: 7mm;
   padding-right: 88px;
   flex: 0 0 auto;
+}
+
+.label-card__header--with-qr {
+  padding-right: 0;
+}
+
+.label-card__header-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.label-card__qr-canvas {
+  flex: 0 0 auto;
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: 4px;
 }
 
 .label-card__eyebrow {
@@ -714,6 +740,14 @@
   .label-card__header {
     margin-bottom: 4mm !important;
     padding-right: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+
+  .label-card__qr-canvas {
+    width: 52px !important;
+    height: 52px !important;
   }
 
   .label-card__eyebrow {
@@ -780,5 +814,59 @@
     overflow: hidden !important;
     font-size: 8.6pt !important;
     line-height: 1.05 !important;
+  }
+}
+
+.sheet-selector {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+  background: var(--panel-color);
+}
+
+.sheet-selector__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.sheet-selector__copy h2 {
+  margin: 0;
+  color: var(--heading-color);
+  font-size: 1.18rem;
+}
+
+.sheet-selector__copy p {
+  margin: 0;
+  color: var(--muted-color);
+}
+
+.sheet-selector__field {
+  display: grid;
+  gap: 8px;
+  min-width: min(320px, 100%);
+  color: var(--muted-color);
+  font-weight: 700;
+}
+
+.sheet-selector__field select {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(31, 92, 77, 0.18);
+  border-radius: 14px;
+  background: #eff4f0;
+  color: var(--heading-color);
+  font: inherit;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .sheet-selector {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

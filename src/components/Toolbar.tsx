@@ -3,6 +3,8 @@ interface ToolbarProps {
   totalCount: number
   selectedCount: number
   settingsSummary: string
+  showQR: boolean
+  onToggleQR: () => void
   onSelectAll: () => void
   onClearSelection: () => void
   onPrintAllWithZebra: () => void
@@ -18,6 +20,8 @@ export function Toolbar({
   totalCount,
   selectedCount,
   settingsSummary,
+  showQR,
+  onToggleQR,
   onSelectAll,
   onClearSelection,
   onPrintAllWithZebra,
@@ -39,6 +43,15 @@ export function Toolbar({
       </div>
 
       <div className="toolbar__actions">
+        <button
+          type="button"
+          className={`toolbar__button ${showQR ? 'toolbar__button--qr-active' : 'toolbar__button--ghost'}`}
+          onClick={onToggleQR}
+          disabled={!hasLabels}
+          aria-pressed={showQR}
+        >
+          {showQR ? 'Ocultar QR' : 'Mostrar QR'}
+        </button>
         <button
           type="button"
           className="toolbar__button toolbar__button--ghost"

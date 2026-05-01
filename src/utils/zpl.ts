@@ -1,5 +1,6 @@
 import type { LabelModel, LabelSettings } from '../types'
 import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
+import { buildQRData } from './qrGenerator'
 
 const BASE_LAYOUT = {
   widthDots: 812,
@@ -166,9 +167,30 @@ export function sanitizeZplText(value: string | null | undefined): string {
     .trim() || '-'
 }
 
+function buildZplQRLines(
+  label: LabelModel,
+  widthDots: number,
+  headerY: number,
+  dpi: number,
+): string[] {
+  const magnification = 3
+  // Estimate: ~35 modules for medium data QR at M error correction → 105 dots
+  const estimatedQrDots = magnification * 35
+  const rightMarginDots = mmToDots(3, dpi)
+  const qrX = Math.max(0, widthDots - estimatedQrDots - rightMarginDots)
+  const qrY = headerY
+  const qrData = sanitizeZplText(buildQRData(label))
+  return [
+    `^FO${qrX},${qrY}`,
+    `^BQN,2,${magnification}`,
+    `^FDQA,${qrData}^FS`,
+  ]
+}
+
 export function buildZplForLabel(
   label: LabelModel,
   settings: LabelSettings = DEFAULT_LABEL_SETTINGS,
+  showQR = false,
 ): string {
   const layout = getZplLayout(settings)
   const obra = sanitizeZplText(label.obra)
@@ -351,6 +373,7 @@ export function buildZplForLabel(
       layout.fieldValue.observaciones.w,
       layout.fieldValue.observaciones.maxLines,
     ),
+    ...(showQR ? buildZplQRLines(label, layout.widthDots, layout.headerTitle.y, settings.dpi) : []),
     '^XZ',
   ].join('\n')
 }
@@ -358,6 +381,7 @@ export function buildZplForLabel(
 export function buildZplForLabels(
   labels: LabelModel[],
   settings: LabelSettings = DEFAULT_LABEL_SETTINGS,
+  showQR = false,
 ): string {
-  return labels.map((label) => buildZplForLabel(label, settings)).join('\n')
+  return labels.map((label) => buildZplForLabel(label, settings, showQR)).join('\n')
 }
