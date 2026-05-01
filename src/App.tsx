@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { EmptyState } from './components/EmptyState'
 import { ErrorMessage } from './components/ErrorMessage'
+import { CompanySettingsPanel } from './components/CompanySettingsPanel'
 import { ImportSummaryPanel } from './components/ImportSummaryPanel'
 import { LabelPresetSelector } from './components/LabelPresetSelector'
 import { LabelPreviewList } from './components/LabelPreviewList'
@@ -9,7 +10,8 @@ import { SheetSelector } from './components/SheetSelector'
 import { Toolbar } from './components/Toolbar'
 import { UploadPanel } from './components/UploadPanel'
 import { parseWorkbookFile } from './lib/excelParser'
-import type { AppMessage, ImportSummary, LabelModel, LabelPresetId, LabelSettings, PrintScope } from './types'
+import type { AppMessage, CompanySettings, ImportSummary, LabelModel, LabelPresetId, LabelSettings, PrintScope } from './types'
+import { loadCompanySettings, saveCompanySettings, validateLogoFile } from './utils/companySettings'
 import { DEFAULT_LABEL_SETTINGS, getLabelPresetById, LABEL_PRESETS } from './utils/labelSettings'
 import { buildZplForLabels } from './utils/zpl'
 import { sendZplToZebra } from './utils/zebraBrowserPrint'
@@ -27,6 +29,9 @@ function App() {
   const [selectedPresetId, setSelectedPresetId] =
     useState<LabelPresetId>(DEFAULT_LABEL_SETTINGS.id)
   const [showQR, setShowQR] = useState(false)
+  const [companySettings, setCompanySettings] =
+    useState<CompanySettings>(() => loadCompanySettings())
+  const [companySettingsError, setCompanySettingsError] = useState<string | null>(null)
   const printScope: PrintScope = 'all'
   const labelSettings: LabelSettings = useMemo(
     () => getLabelPresetById(selectedPresetId),
@@ -49,6 +54,10 @@ function App() {
       String(labelSettings.heightMm / labelSettings.widthMm),
     )
   }, [labelSettings])
+
+  useEffect(() => {
+    saveCompanySettings(companySettings)
+  }, [companySettings])
 
   const selectedCount = useMemo(
     () => labels.filter((label) => label.selected).length,
@@ -143,7 +152,48 @@ function App() {
     }
 
     setErrorMessage(null)
-    return buildZplForLabels(scopedLabels, labelSettings, showQR)
+    return buildZplForLabels(scopedLabels, labelSettings, showQR, companySettings)
+  }
+
+  const handleCompanySettingsChange = (nextSettings: CompanySettings) => {
+    setCompanySettings(nextSettings)
+    setCompanySettingsError(null)
+  }
+
+  const handleLogoFileSelect = (file: File | null) => {
+    if (!file) {
+      return
+    }
+
+    const validation = validateLogoFile(file)
+    if (!validation.valid) {
+      setCompanySettingsError(validation.errorMessage)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        setCompanySettingsError('No se pudo leer el logo seleccionado.')
+        return
+      }
+
+      setCompanySettings((current) => ({
+        ...current,
+        companyLogoDataUrl: reader.result as string,
+        showLogo: true,
+      }))
+      setCompanySettingsError(null)
+    }
+    reader.onerror = () => {
+      setCompanySettingsError('No se pudo leer el logo seleccionado.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleClearLogo = () => {
+    setCompanySettings((current) => ({ ...current, companyLogoDataUrl: null }))
+    setCompanySettingsError(null)
   }
 
   const downloadZpl = (scope: PrintScope) => {
@@ -248,6 +298,14 @@ function App() {
           onSelectPreset={setSelectedPresetId}
         />
 
+        <CompanySettingsPanel
+          settings={companySettings}
+          errorMessage={companySettingsError}
+          onChange={handleCompanySettingsChange}
+          onLogoFileSelect={handleLogoFileSelect}
+          onClearLogo={handleClearLogo}
+        />
+
         <Toolbar
           hasLabels={labels.length > 0}
           totalCount={labels.length}
@@ -273,6 +331,7 @@ function App() {
             settings={labelSettings}
             printScope={printScope}
             showQR={showQR}
+            companySettings={companySettings}
             onToggleSelection={updateLabelSelection}
           />
         )}

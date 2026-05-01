@@ -1,12 +1,14 @@
 import { useEffect, useRef, type CSSProperties } from 'react'
-import type { LabelModel } from '../types'
+import type { CompanySettings, LabelModel } from '../types'
 import type { LabelSettings } from '../types'
+import { shouldShowCompanyBranding, shouldShowCompanyLogo } from '../utils/companySettings'
 import { buildQRData, renderQRToCanvas } from '../utils/qrGenerator'
 
 interface LabelCardProps {
   label: LabelModel
   settings: LabelSettings
   showQR: boolean
+  companySettings: CompanySettings
   hiddenOnPrint: boolean
   onToggleSelection: (id: string, selected: boolean) => void
 }
@@ -33,10 +35,13 @@ export function LabelCard({
   label,
   settings,
   showQR,
+  companySettings,
   hiddenOnPrint,
   onToggleSelection,
 }: LabelCardProps) {
   const isCompactFormat = settings.id === '80x50'
+  const showBranding = shouldShowCompanyBranding(companySettings)
+  const showLogo = shouldShowCompanyLogo(companySettings)
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -72,9 +77,34 @@ export function LabelCard({
 
       <div className="label-print-sheet label-print">
         <header className={`label-card__header ${showQR && !isCompactFormat ? 'label-card__header--with-qr' : ''}`.trim()}>
-          <div className="label-card__header-text">
-            <span className="label-card__eyebrow">Etiqueta de corte</span>
-            <h3 className="label-card__headline">DVH listo para produccion</h3>
+          <div className="label-card__brand-block">
+            {showLogo ? (
+              <img
+                className="label-card__logo"
+                src={companySettings.companyLogoDataUrl ?? undefined}
+                alt=""
+              />
+            ) : null}
+            <div className="label-card__header-text">
+              {companySettings.showCompanyName ? (
+                <>
+                  <strong className="label-card__company-name">
+                    {companySettings.companyName || 'Facundo Morazzo'}
+                  </strong>
+                  <span className="label-card__company-subtitle">
+                    {companySettings.companySubtitle || 'Vidriería y Aberturas'}
+                  </span>
+                </>
+              ) : null}
+              {!showBranding ? (
+                <>
+                  <span className="label-card__eyebrow">Etiqueta de corte</span>
+                  <h3 className="label-card__headline">DVH listo para produccion</h3>
+                </>
+              ) : (
+                <span className="label-card__eyebrow">Etiqueta de corte</span>
+              )}
+            </div>
           </div>
           {showQR && !isCompactFormat && (
             <canvas
@@ -85,7 +115,23 @@ export function LabelCard({
           )}
         </header>
 
-        <div className="label-card__body">
+        <div
+          className={`label-card__body ${showBranding && isCompactFormat ? 'label-card__body--with-brand' : ''}`.trim()}
+        >
+          {showBranding && isCompactFormat ? (
+            <div className="label-card__compact-brand">
+              {showLogo ? (
+                <img
+                  className="label-card__compact-logo"
+                  src={companySettings.companyLogoDataUrl ?? undefined}
+                  alt=""
+                />
+              ) : null}
+              {companySettings.showCompanyName ? (
+                <span>{companySettings.companyName || 'Facundo Morazzo'}</span>
+              ) : null}
+            </div>
+          ) : null}
           <LabelField
             name="Obra"
             value={label.obra}

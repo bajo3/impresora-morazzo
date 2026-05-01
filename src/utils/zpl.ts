@@ -1,4 +1,5 @@
-import type { LabelModel, LabelSettings } from '../types'
+import type { CompanySettings, LabelModel, LabelSettings } from '../types'
+import { getDefaultCompanySettings } from './companySettings'
 import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
 import { buildQRData } from './qrGenerator'
 
@@ -187,10 +188,34 @@ function buildZplQRLines(
   ]
 }
 
+function buildStandardBrandingLines(
+  companySettings: CompanySettings,
+  x: number,
+  y: number,
+  contentWidth: number,
+): string[] {
+  if (!companySettings.showCompanyName) {
+    return [
+      `^FO${x},${y}^A0N,42,42^FDETIQUETA DE CORTE^FS`,
+      `^FO${x},${y + 52}^A0N,28,28^FDDVH listo para produccion^FS`,
+    ]
+  }
+
+  return [
+    `^FO${x},${y}^A0N,40,38^FB${contentWidth},1,8,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+    `^FO${x},${y + 46}^A0N,26,25^FB${contentWidth},1,6,L,0^FD${sanitizeZplText(companySettings.companySubtitle)}^FS`,
+  ]
+}
+
+function compactBrandingOffset(companySettings: CompanySettings): number {
+  return companySettings.showCompanyName ? 18 : 0
+}
+
 export function buildZplForLabel(
   label: LabelModel,
   settings: LabelSettings = DEFAULT_LABEL_SETTINGS,
   showQR = false,
+  companySettings: CompanySettings = getDefaultCompanySettings(),
 ): string {
   const layout = getZplLayout(settings)
   const obra = sanitizeZplText(label.obra)
@@ -201,6 +226,7 @@ export function buildZplForLabel(
   const observaciones = sanitizeZplText(label.observaciones)
 
   if (layout.mode === 'compact') {
+    const compactOffset = compactBrandingOffset(companySettings)
     const compactMedidas = medidas.length > 15 ? medidas.replace(' x ', 'x') : medidas
     const compactObra = obra.length > 34 ? `${obra.slice(0, 34)}...` : obra
     const compactComposicion =
@@ -214,21 +240,26 @@ export function buildZplForLabel(
       `^PW${layout.widthDots}`,
       `^LL${layout.heightDots}`,
       '^LH0,0',
-      `^FO${layout.leftMargin},18^A0N,24,22^FDOBRA^FS`,
-      fieldValue(layout.leftMargin, layout.contentWidth - 110, 48, compactObra, 28, 26, 1),
-      `^FO${layout.widthDots - 120},18^A0N,24,22^FDCANT^FS`,
-      fieldValueNoWrap(layout.widthDots - 106, 46, cantidad, 54, 48),
-      `^FO${layout.leftMargin},92^GB${layout.contentWidth},2,2^FS`,
-      `^FO${layout.leftMargin},106^A0N,24,22^FDMEDIDAS^FS`,
-      fieldValue(layout.leftMargin, layout.contentWidth, 136, compactMedidas, 72, 64, 1),
-      `^FO${layout.leftMargin},218^GB${layout.contentWidth},2,2^FS`,
-      `^FO${layout.leftMargin},234^A0N,24,22^FDDVH^FS`,
-      fieldValue(layout.leftMargin, layout.contentWidth - 120, 262, compactComposicion, 32, 30, 1),
-      `^FO${layout.widthDots - 120},234^A0N,24,22^FDM2^FS`,
-      fieldValueNoWrap(layout.widthDots - 112, 264, mts2, 32, 30),
-      `^FO${layout.leftMargin},316^GB${layout.contentWidth},2,2^FS`,
-      `^FO${layout.leftMargin},332^A0N,22,20^FDOBS^FS`,
-      fieldValue(layout.leftMargin + 58, layout.contentWidth - 58, 330, compactObs, 24, 22, 2),
+      ...(companySettings.showCompanyName
+        ? [
+            `^FO${layout.leftMargin},4^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+          ]
+        : []),
+      `^FO${layout.leftMargin},${18 + compactOffset}^A0N,24,22^FDOBRA^FS`,
+      fieldValue(layout.leftMargin, layout.contentWidth - 110, 48 + compactOffset, compactObra, 28, 26, 1),
+      `^FO${layout.widthDots - 120},${18 + compactOffset}^A0N,24,22^FDCANT^FS`,
+      fieldValueNoWrap(layout.widthDots - 106, 46 + compactOffset, cantidad, 54, 48),
+      `^FO${layout.leftMargin},${92 + compactOffset}^GB${layout.contentWidth},2,2^FS`,
+      `^FO${layout.leftMargin},${106 + compactOffset}^A0N,24,22^FDMEDIDAS^FS`,
+      fieldValue(layout.leftMargin, layout.contentWidth, 136 + compactOffset, compactMedidas, 72, 64, 1),
+      `^FO${layout.leftMargin},${218 + compactOffset}^GB${layout.contentWidth},2,2^FS`,
+      `^FO${layout.leftMargin},${234 + compactOffset}^A0N,24,22^FDDVH^FS`,
+      fieldValue(layout.leftMargin, layout.contentWidth - 120, 262 + compactOffset, compactComposicion, 32, 30, 1),
+      `^FO${layout.widthDots - 120},${234 + compactOffset}^A0N,24,22^FDM2^FS`,
+      fieldValueNoWrap(layout.widthDots - 112, 264 + compactOffset, mts2, 32, 30),
+      `^FO${layout.leftMargin},${316 + compactOffset}^GB${layout.contentWidth},2,2^FS`,
+      `^FO${layout.leftMargin},${332 + compactOffset}^A0N,22,20^FDOBS^FS`,
+      fieldValue(layout.leftMargin + 58, layout.contentWidth - 58, 330 + compactOffset, compactObs, 24, 22, 2),
       '^XZ',
     ].join('\n')
   }
@@ -239,8 +270,12 @@ export function buildZplForLabel(
     `^PW${layout.widthDots}`,
     `^LL${layout.heightDots}`,
     '^LH0,0',
-    `^FO${layout.headerTitle.x},${layout.headerTitle.y}^A0N,${layout.headerTitle.h},${layout.headerTitle.w}^FDETIQUETA DE CORTE^FS`,
-    `^FO${layout.headerSubtitle.x},${layout.headerSubtitle.y}^A0N,${layout.headerSubtitle.h},${layout.headerSubtitle.w}^FDDVH listo para produccion^FS`,
+    ...buildStandardBrandingLines(
+      companySettings,
+      layout.headerTitle.x,
+      layout.headerTitle.y,
+      showQR ? Math.max(220, layout.contentWidth - 128) : layout.contentWidth,
+    ),
     fieldSeparator(
       layout.separatorY[0],
       layout.separatorX,
@@ -382,6 +417,9 @@ export function buildZplForLabels(
   labels: LabelModel[],
   settings: LabelSettings = DEFAULT_LABEL_SETTINGS,
   showQR = false,
+  companySettings: CompanySettings = getDefaultCompanySettings(),
 ): string {
-  return labels.map((label) => buildZplForLabel(label, settings, showQR)).join('\n')
+  return labels
+    .map((label) => buildZplForLabel(label, settings, showQR, companySettings))
+    .join('\n')
 }

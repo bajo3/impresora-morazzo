@@ -106,3 +106,19 @@ interface PrintHistoryEntry {
 - Si la detección falla, se abre el mapper modal
 - El usuario puede asignar manualmente cada campo
 - El parser usa el mapa personalizado para generar los LabelModel
+
+---
+
+## Plan activo: Branding de empresa en etiquetas
+
+**Estado:** primera versiÃ³n segura implementada
+
+**Incluye:**
+- ConfiguraciÃ³n local de empresa con nombre, subtÃ­tulo, logo y toggles de visibilidad.
+- Preview con logo de empresa cuando hay imagen cargada.
+- ZPL con branding textual (`Facundo Morazzo` / subtÃ­tulo) cuando `showCompanyName=true`.
+
+**LimitaciÃ³n Zebra/ZPL:**
+- El logo grÃ¡fico no se inserta todavÃ­a en ZPL. Para hacerlo bien hay que convertir el Data URL a bitmap monocromo y emitir `^GFA`; esa conversiÃ³n es naturalmente async en navegador si se usa `Image`/`canvas`.
+- El pipeline actual de `buildZplForLabel` / `buildZplForLabels` es sincrÃ³nico, asÃ­ que se evitÃ³ un refactor grande para no romper descarga, copiado, BrowserPrint ni QR.
+- Pendiente recomendado: agregar una funciÃ³n async separada para preparar logo ZPL (`Data URL -> canvas -> monocromo -> ^GFA`) y usar fallback textual si falla.

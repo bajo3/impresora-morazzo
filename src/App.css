@@ -15,6 +15,7 @@
 .hero-copy,
 .upload-panel,
 .preset-selector,
+.company-settings,
 .toolbar,
 .empty-state,
 .preview-panel,
@@ -212,6 +213,133 @@
   box-shadow: 0 14px 22px rgba(31, 92, 77, 0.15);
 }
 
+.company-settings {
+  display: grid;
+  gap: 18px;
+  padding: 18px 20px;
+}
+
+.company-settings__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.company-settings__copy h2 {
+  margin: 0;
+  color: var(--heading-color);
+  font-size: 1.18rem;
+}
+
+.company-settings__copy p {
+  margin: 0;
+  color: var(--muted-color);
+}
+
+.company-settings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) minmax(190px, 0.7fr);
+  gap: 14px;
+  align-items: end;
+}
+
+.company-settings__field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted-color);
+  font-weight: 700;
+}
+
+.company-settings__field input {
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(31, 92, 77, 0.18);
+  border-radius: 14px;
+  background: #eff4f0;
+  color: var(--heading-color);
+  font: inherit;
+  font-weight: 700;
+}
+
+.company-settings__toggles,
+.company-settings__logo-actions {
+  display: flex;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.company-settings__toggles {
+  color: var(--heading-color);
+  font-weight: 700;
+}
+
+.company-settings__toggles label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.company-settings__toggles input {
+  width: 18px;
+  height: 18px;
+  accent-color: #1f5c4d;
+}
+
+.company-settings__upload-button,
+.company-settings__clear-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(31, 92, 77, 0.16);
+  border-radius: 14px;
+  background: #eff4f0;
+  color: #1f5c4d;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.company-settings__upload-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.company-settings__clear-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.company-settings__preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  padding: 10px;
+  border: 1px dashed rgba(31, 92, 77, 0.22);
+  border-radius: 14px;
+  background: rgba(239, 244, 240, 0.62);
+  color: var(--muted-color);
+  font-weight: 700;
+}
+
+.company-settings__preview img {
+  display: block;
+  max-width: 150px;
+  max-height: 52px;
+  object-fit: contain;
+}
+
+.company-settings__error {
+  margin: 0;
+  color: #8f2f21;
+  font-weight: 700;
+}
+
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -369,6 +497,38 @@
   min-width: 0;
 }
 
+.label-card__brand-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.label-card__logo {
+  display: block;
+  width: 18mm;
+  max-height: 15mm;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.label-card__company-name {
+  display: block;
+  color: #10221b;
+  font-size: 14pt;
+  line-height: 1.05;
+}
+
+.label-card__company-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: #557469;
+  font-size: 8.8pt;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .label-card__qr-canvas {
   flex: 0 0 auto;
   display: block;
@@ -487,6 +647,43 @@
   gap: 1.8mm 2.2mm;
 }
 
+.label-card--compact .label-card__body--with-brand {
+  grid-template-areas:
+    "brand brand"
+    "obra cantidad"
+    "medidas medidas"
+    "dvh mts2"
+    "notes notes";
+}
+
+.label-card__compact-brand {
+  grid-area: brand;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding-bottom: 1mm;
+  border-bottom: 1px solid rgba(125, 145, 138, 0.28);
+  color: #10221b;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.label-card__compact-brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.label-card__compact-logo {
+  display: block;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
 .label-card--compact .label-field {
   gap: 0.5mm;
   min-width: 0;
@@ -581,6 +778,7 @@
   .hero-copy,
   .upload-panel,
   .preset-selector,
+  .company-settings,
   .toolbar,
   .preview-panel,
   .empty-state {
@@ -610,6 +808,10 @@
     right: 10px;
     left: 10px;
     justify-content: center;
+  }
+
+  .company-settings__grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -671,6 +873,7 @@
   .status-panel,
   .toolbar,
   .preset-selector,
+  .company-settings,
   .empty-state,
   .label-card__toggle {
     display: none !important;
@@ -743,6 +946,19 @@
     display: flex !important;
     align-items: flex-start !important;
     gap: 6px !important;
+  }
+
+  .label-card__logo {
+    width: 14mm !important;
+    max-height: 11mm !important;
+  }
+
+  .label-card__company-name {
+    font-size: 11pt !important;
+  }
+
+  .label-card__company-subtitle {
+    font-size: 7.4pt !important;
   }
 
   .label-card__qr-canvas {

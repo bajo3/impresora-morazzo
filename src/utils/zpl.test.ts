@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { sanitizeZplText, buildZplForLabel } from './zpl'
 import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
+import { getDefaultCompanySettings } from './companySettings'
 import { sampleLabel } from '../test/fixtures/sampleLabels'
 
 describe('sanitizeZplText', () => {
@@ -76,6 +77,27 @@ describe('buildZplForLabel', () => {
     const zpl = buildZplForLabel(sampleLabel, DEFAULT_LABEL_SETTINGS, true)
     expect(zpl).toContain('^BQN,2,')
     expect(zpl).toContain('^FDQA,')
+  })
+
+  it('incluye Facundo Morazzo cuando showCompanyName es true', () => {
+    const zpl = buildZplForLabel(
+      sampleLabel,
+      DEFAULT_LABEL_SETTINGS,
+      false,
+      getDefaultCompanySettings(),
+    )
+
+    expect(zpl).toContain('Facundo Morazzo')
+  })
+
+  it('no incluye branding de empresa cuando showCompanyName es false', () => {
+    const zpl = buildZplForLabel(sampleLabel, DEFAULT_LABEL_SETTINGS, false, {
+      ...getDefaultCompanySettings(),
+      showCompanyName: false,
+    })
+
+    expect(zpl).not.toContain('Facundo Morazzo')
+    expect(zpl).toContain('ETIQUETA DE CORTE')
   })
 
   it('no incluye ^BQ en modo compact (80x50) aunque showQR sea true', () => {

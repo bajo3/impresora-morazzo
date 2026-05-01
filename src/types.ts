@@ -75,3 +75,11 @@ export interface LabelSettings {
   dpi: number
   marginMm: number
 }
+
+export interface CompanySettings {
+  companyName: string
+  companySubtitle: string
+  companyLogoDataUrl: string | null
+  showLogo: boolean
+  showCompanyName: boolean
+}
