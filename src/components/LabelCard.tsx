@@ -116,9 +116,9 @@ export function LabelCard({
         </header>
 
         <div
-          className={`label-card__body ${showBranding && isCompactFormat ? 'label-card__body--with-brand' : ''}`.trim()}
+          className={`label-card__body ${(showBranding || label.nombre) && isCompactFormat ? 'label-card__body--with-brand' : ''}`.trim()}
         >
-          {showBranding && isCompactFormat ? (
+          {(showBranding || label.nombre) && isCompactFormat ? (
             <div className="label-card__compact-brand">
               {showLogo ? (
                 <img
@@ -127,9 +127,18 @@ export function LabelCard({
                   alt=""
                 />
               ) : null}
-              {companySettings.showCompanyName ? (
-                <span>{companySettings.companyName || 'Facundo Morazzo'}</span>
-              ) : null}
+              <div className="label-card__compact-brand-text">
+                {companySettings.showCompanyName ? (
+                  <span className="label-card__compact-company">
+                    {companySettings.companyName}
+                  </span>
+                ) : null}
+                {label.nombre ? (
+                  <strong className="label-card__compact-nombre">
+                    {label.nombre}
+                  </strong>
+                ) : null}
+              </div>
             </div>
           ) : null}
           <LabelField

@@ -665,15 +665,34 @@
   padding-bottom: 1mm;
   border-bottom: 1px solid rgba(125, 145, 138, 0.28);
   color: #10221b;
-  font-size: 0.62rem;
-  font-weight: 800;
-  line-height: 1;
+  line-height: 1.15;
 }
 
-.label-card__compact-brand span {
+.label-card__compact-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5mm;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.label-card__compact-company {
+  font-size: 0.72rem;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #2d6b59;
+  letter-spacing: 0.01em;
+}
+
+.label-card__compact-nombre {
+  font-size: 0.88rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #10221b;
 }
 
 .label-card__compact-logo {
