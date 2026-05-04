@@ -207,9 +207,6 @@ function buildStandardBrandingLines(
   ]
 }
 
-function compactBrandingOffset(companySettings: CompanySettings): number {
-  return companySettings.showCompanyName ? 18 : 0
-}
 
 function getPrintQuantity(label: LabelModel): number {
   const quantity = Number.parseInt(label.cantidad, 10)
@@ -236,13 +233,41 @@ export function buildZplForLabel(
   const observaciones = sanitizeZplText(label.observaciones)
 
   if (layout.mode === 'compact') {
-    const compactOffset = compactBrandingOffset(companySettings)
+    const nombre = sanitizeZplText(label.nombre)
+    const hasNombre = nombre !== '-'
+
+    const headerLines: string[] = []
+    let compactOffset: number
+
+    if (companySettings.showCompanyName && hasNombre) {
+      headerLines.push(
+        `^FO${layout.leftMargin},2^A0N,16,15^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+        `^FO${layout.leftMargin},20^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
+      )
+      compactOffset = 38
+    } else if (companySettings.showCompanyName) {
+      headerLines.push(
+        `^FO${layout.leftMargin},4^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+      )
+      compactOffset = 18
+    } else if (hasNombre) {
+      headerLines.push(
+        `^FO${layout.leftMargin},4^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
+      )
+      compactOffset = 22
+    } else {
+      compactOffset = 0
+    }
+
     const compactMedidas = medidas.length > 15 ? medidas.replace(' x ', 'x') : medidas
     const compactObra = obra.length > 34 ? `${obra.slice(0, 34)}...` : obra
     const compactComposicion =
       composicion.length > 28 ? `${composicion.slice(0, 28)}...` : composicion
     const compactObs =
       observaciones.length > 28 ? `${observaciones.slice(0, 28)}...` : observaciones
+    // When both company name and nombre are shown (compactOffset=38), OBS must
+    // fit in 1 line to stay within the 400-dot height of the 80x50 label.
+    const obsMaxLines = compactOffset >= 38 ? 1 : 2
 
     return [
       '^XA',
@@ -250,11 +275,7 @@ export function buildZplForLabel(
       `^PW${layout.widthDots}`,
       `^LL${layout.heightDots}`,
       '^LH0,0',
-      ...(companySettings.showCompanyName
-        ? [
-            `^FO${layout.leftMargin},4^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
-          ]
-        : []),
+      ...headerLines,
       `^FO${layout.leftMargin},${18 + compactOffset}^A0N,24,22^FDOBRA^FS`,
       fieldValue(layout.leftMargin, layout.contentWidth - 110, 48 + compactOffset, compactObra, 28, 26, 1),
       `^FO${layout.widthDots - 120},${18 + compactOffset}^A0N,24,22^FDCANT^FS`,
@@ -269,7 +290,7 @@ export function buildZplForLabel(
       fieldValueNoWrap(layout.widthDots - 112, 264 + compactOffset, mts2, 32, 30),
       `^FO${layout.leftMargin},${316 + compactOffset}^GB${layout.contentWidth},2,2^FS`,
       `^FO${layout.leftMargin},${332 + compactOffset}^A0N,22,20^FDOBS^FS`,
-      fieldValue(layout.leftMargin + 58, layout.contentWidth - 58, 330 + compactOffset, compactObs, 24, 22, 2),
+      fieldValue(layout.leftMargin + 58, layout.contentWidth - 58, 330 + compactOffset, compactObs, 24, 22, obsMaxLines),
       '^XZ',
     ].join('\n')
   }
