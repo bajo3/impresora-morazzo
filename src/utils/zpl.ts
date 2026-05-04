@@ -240,21 +240,22 @@ export function buildZplForLabel(
     let compactOffset: number
 
     if (companySettings.showCompanyName && hasNombre) {
+      // Company name prominent (28pt, Y≥18 safe margin) + cliente debajo
       headerLines.push(
-        `^FO${layout.leftMargin},2^A0N,16,15^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
-        `^FO${layout.leftMargin},20^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
+        `^FO${layout.leftMargin},18^A0N,28,26^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+        `^FO${layout.leftMargin},52^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
       )
-      compactOffset = 38
+      compactOffset = 64
     } else if (companySettings.showCompanyName) {
       headerLines.push(
-        `^FO${layout.leftMargin},4^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+        `^FO${layout.leftMargin},18^A0N,28,26^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
       )
-      compactOffset = 18
+      compactOffset = 46
     } else if (hasNombre) {
       headerLines.push(
-        `^FO${layout.leftMargin},4^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
+        `^FO${layout.leftMargin},18^A0N,28,26^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
       )
-      compactOffset = 22
+      compactOffset = 46
     } else {
       compactOffset = 0
     }
@@ -265,9 +266,13 @@ export function buildZplForLabel(
       composicion.length > 28 ? `${composicion.slice(0, 28)}...` : composicion
     const compactObs =
       observaciones.length > 28 ? `${observaciones.slice(0, 28)}...` : observaciones
-    // When both company name and nombre are shown (compactOffset=38), OBS must
-    // fit in 1 line to stay within the 400-dot height of the 80x50 label.
-    const obsMaxLines = compactOffset >= 38 ? 1 : 2
+
+    // Full header (company + nombre, compactOffset=64): tighten OBS to fit 400 dots
+    const obsSepOffset = compactOffset >= 64 ? compactOffset - 6 : compactOffset
+    const obsLineOffset = compactOffset >= 64 ? compactOffset - 10 : compactOffset
+    const obsLabelFont = compactOffset >= 64 ? { h: 18, w: 17 } : { h: 22, w: 20 }
+    const obsValueFont = compactOffset >= 64 ? { h: 18, w: 17 } : { h: 24, w: 22 }
+    const obsMaxLines = compactOffset >= 64 ? 1 : 2
 
     return [
       '^XA',
@@ -288,9 +293,9 @@ export function buildZplForLabel(
       fieldValue(layout.leftMargin, layout.contentWidth - 120, 262 + compactOffset, compactComposicion, 32, 30, 1),
       `^FO${layout.widthDots - 120},${234 + compactOffset}^A0N,24,22^FDM2^FS`,
       fieldValueNoWrap(layout.widthDots - 112, 264 + compactOffset, mts2, 32, 30),
-      `^FO${layout.leftMargin},${316 + compactOffset}^GB${layout.contentWidth},2,2^FS`,
-      `^FO${layout.leftMargin},${332 + compactOffset}^A0N,22,20^FDOBS^FS`,
-      fieldValue(layout.leftMargin + 58, layout.contentWidth - 58, 330 + compactOffset, compactObs, 24, 22, obsMaxLines),
+      `^FO${layout.leftMargin},${316 + obsSepOffset}^GB${layout.contentWidth},2,2^FS`,
+      `^FO${layout.leftMargin},${332 + obsLineOffset}^A0N,${obsLabelFont.h},${obsLabelFont.w}^FDOBS^FS`,
+      fieldValue(layout.leftMargin + 58, layout.contentWidth - 58, 330 + obsLineOffset, compactObs, obsValueFont.h, obsValueFont.w, obsMaxLines),
       '^XZ',
     ].join('\n')
   }
