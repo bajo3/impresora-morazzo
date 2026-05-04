@@ -461,6 +461,51 @@ function buildImportSummary(tableSummaries: TableSummary[]): ImportSummary {
   }
 }
 
+function parseSheetNameDate(sheetName: string): number | null {
+  const match = sheetName.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b/)
+
+  if (!match) {
+    return null
+  }
+
+  const day = Number.parseInt(match[1], 10)
+  const month = Number.parseInt(match[2], 10)
+  const rawYear = Number.parseInt(match[3], 10)
+  const year = rawYear < 100 ? 2000 + rawYear : rawYear
+  const date = new Date(year, month - 1, day)
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null
+  }
+
+  return date.getTime()
+}
+
+function resolveDefaultSheetName(sheetNames: string[]): string | undefined {
+  const datedSheet = sheetNames.reduce<{ name: string; time: number } | null>(
+    (latest, sheetName) => {
+      const time = parseSheetNameDate(sheetName)
+
+      if (time === null) {
+        return latest
+      }
+
+      if (!latest || time > latest.time) {
+        return { name: sheetName, time }
+      }
+
+      return latest
+    },
+    null,
+  )
+
+  return datedSheet?.name ?? sheetNames[sheetNames.length - 1]
+}
+
 // ---------------------------------------------------------------------------
 // Main export
 // ---------------------------------------------------------------------------
@@ -473,7 +518,7 @@ export async function parseWorkbookFile(
   const XLSX = await import('xlsx')
   const workbook = XLSX.read(buffer, { type: 'array' })
   const sheetNames = workbook.SheetNames.filter(Boolean)
-  const sheetName = selectedSheetName ?? sheetNames[0]
+  const sheetName = selectedSheetName ?? resolveDefaultSheetName(sheetNames)
 
   if (sheetNames.length === 0 || !sheetName) {
     throw new Error('El archivo no contiene hojas para procesar.')

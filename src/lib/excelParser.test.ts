@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectTableBlocks } from './excelParser'
+import { detectTableBlocks, parseWorkbookFile } from './excelParser'
 
 // ---------------------------------------------------------------------------
 // Fixtures que replican la estructura de "Feli Lentini.xlsx"
@@ -109,6 +109,45 @@ describe('detectTableBlocks', () => {
     const blocks = detectTableBlocks(legacySheetSingleCellMedidas)
     expect(blocks.length).toBe(1)
     expect(blocks[0].type).toBe('dvh')
+  })
+})
+
+describe('seleccion de hoja inicial', () => {
+  async function buildWorkbookFile(sheetNames: string[]): Promise<File> {
+    const XLSX = await import('xlsx')
+    const workbook = XLSX.utils.book_new()
+
+    sheetNames.forEach((sheetName) => {
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.aoa_to_sheet(legacySheetSingleCellMedidas),
+        sheetName,
+      )
+    })
+
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer
+    return new File([buffer], 'test.xlsx')
+  }
+
+  it('elige por defecto la hoja con fecha mas reciente en el nombre', async () => {
+    const file = await buildWorkbookFile([
+      '07-04-2026',
+      '08-04-2026',
+      '10-04-2026',
+      '15-04-2026',
+    ])
+
+    const result = await parseWorkbookFile(file)
+
+    expect(result.selectedSheetName).toBe('15-04-2026')
+  })
+
+  it('si no hay fechas reconocibles, elige la ultima hoja del archivo', async () => {
+    const file = await buildWorkbookFile(['Primera', 'Segunda', 'Final'])
+
+    const result = await parseWorkbookFile(file)
+
+    expect(result.selectedSheetName).toBe('Final')
   })
 })
 

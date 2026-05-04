@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeZplText, buildZplForLabel } from './zpl'
+import { sanitizeZplText, buildZplForLabel, buildZplForLabels } from './zpl'
 import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
 import { getDefaultCompanySettings } from './companySettings'
 import { sampleLabel } from '../test/fixtures/sampleLabels'
@@ -127,5 +127,21 @@ describe('buildZplForLabel', () => {
     const zpl = buildZplForLabel(sampleLabel, DEFAULT_LABEL_SETTINGS)
     // 100mm * 203/25.4 ≈ 799 dots
     expect(zpl).toMatch(/\^PW7[89]\d/)
+  })
+})
+
+describe('buildZplForLabels', () => {
+  it('genera tantas etiquetas como indique cantidad', () => {
+    const zpl = buildZplForLabels([{ ...sampleLabel, cantidad: '4' }], DEFAULT_LABEL_SETTINGS)
+
+    expect(zpl.match(/\^XA/g) ?? []).toHaveLength(4)
+    expect(zpl.match(/\^XZ/g) ?? []).toHaveLength(4)
+  })
+
+  it('usa una etiqueta cuando cantidad no es valida', () => {
+    const zpl = buildZplForLabels([{ ...sampleLabel, cantidad: '' }], DEFAULT_LABEL_SETTINGS)
+
+    expect(zpl.match(/\^XA/g) ?? []).toHaveLength(1)
+    expect(zpl.match(/\^XZ/g) ?? []).toHaveLength(1)
   })
 })

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\felip\\\\Desktop\\\\Feli Web\\\\impresora-morazzo\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

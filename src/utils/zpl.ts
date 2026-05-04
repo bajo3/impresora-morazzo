@@ -211,6 +211,16 @@ function compactBrandingOffset(companySettings: CompanySettings): number {
   return companySettings.showCompanyName ? 18 : 0
 }
 
+function getPrintQuantity(label: LabelModel): number {
+  const quantity = Number.parseInt(label.cantidad, 10)
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return 1
+  }
+
+  return quantity
+}
+
 export function buildZplForLabel(
   label: LabelModel,
   settings: LabelSettings = DEFAULT_LABEL_SETTINGS,
@@ -420,6 +430,10 @@ export function buildZplForLabels(
   companySettings: CompanySettings = getDefaultCompanySettings(),
 ): string {
   return labels
-    .map((label) => buildZplForLabel(label, settings, showQR, companySettings))
+    .flatMap((label) =>
+      Array.from({ length: getPrintQuantity(label) }, () =>
+        buildZplForLabel(label, settings, showQR, companySettings),
+      ),
+    )
     .join('\n')
 }

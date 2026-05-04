@@ -16,6 +16,16 @@ import { DEFAULT_LABEL_SETTINGS, getLabelPresetById, LABEL_PRESETS } from './uti
 import { buildZplForLabels } from './utils/zpl'
 import { sendZplToZebra } from './utils/zebraBrowserPrint'
 
+function getLabelPrintQuantity(label: LabelModel): number {
+  const quantity = Number.parseInt(label.cantidad, 10)
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return 1
+  }
+
+  return quantity
+}
+
 function App() {
   const [labels, setLabels] = useState<LabelModel[]>([])
   const [messages, setMessages] = useState<AppMessage[]>([])
@@ -60,7 +70,15 @@ function App() {
   }, [companySettings])
 
   const selectedCount = useMemo(
-    () => labels.filter((label) => label.selected).length,
+    () =>
+      labels
+        .filter((label) => label.selected)
+        .reduce((total, label) => total + getLabelPrintQuantity(label), 0),
+    [labels],
+  )
+
+  const totalPrintCount = useMemo(
+    () => labels.reduce((total, label) => total + getLabelPrintQuantity(label), 0),
     [labels],
   )
 
@@ -308,7 +326,7 @@ function App() {
 
         <Toolbar
           hasLabels={labels.length > 0}
-          totalCount={labels.length}
+          totalCount={totalPrintCount}
           selectedCount={selectedCount}
           settingsSummary={settingsSummary}
           showQR={showQR}
