@@ -3,7 +3,7 @@ import type { LabelModel } from '../../types'
 export const sampleLabel: LabelModel = {
   id: 'test-1-0',
   rowNumber: 1,
-  nombre: '',
+  nombre: 'Cliente Test',
   obra: 'Edificio Test',
   medidas: '600 x 800',
   medidas1: '600',

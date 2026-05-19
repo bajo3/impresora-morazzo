@@ -118,6 +118,26 @@ describe('buildZplForLabel', () => {
     expect(zpl).toContain('Edificio Test')
   })
 
+  it('incluye el nombre como campo en el preset standard', () => {
+    const zpl = buildZplForLabel(sampleLabel, DEFAULT_LABEL_SETTINGS)
+    expect(zpl).toContain('NOMBRE')
+    expect(zpl).toContain('Cliente Test')
+  })
+
+  it('incluye el nombre identificado en el preset compact', () => {
+    const compactSettings = {
+      id: '80x50' as const,
+      name: '80 x 50',
+      widthMm: 80,
+      heightMm: 50,
+      dpi: 203,
+      marginMm: 3,
+    }
+    const zpl = buildZplForLabel(sampleLabel, compactSettings)
+    expect(zpl).toContain('NOMBRE')
+    expect(zpl).toContain('Cliente Test')
+  })
+
   it('incluye las medidas en el ZPL', () => {
     const zpl = buildZplForLabel(sampleLabel, DEFAULT_LABEL_SETTINGS)
     expect(zpl).toContain('600 x 800')

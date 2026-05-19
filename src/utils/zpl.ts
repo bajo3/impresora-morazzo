@@ -11,15 +11,16 @@ const BASE_LAYOUT = {
   separatorWidth: 742,
   separatorThickness: 2,
   contentWidth: 732,
-  separatorY: [128, 288, 484, 674, 842, 990],
-  labelY: [154, 320, 520, 706, 874, 1020],
-  valueY: [188, 356, 556, 742, 910, 1054],
+  separatorY: [128, 244, 386, 564, 706, 870, 984],
+  labelY: [150, 266, 408, 586, 728, 892, 1006],
+  valueY: [182, 298, 444, 614, 762, 926, 1038],
   headerTitle: { x: 40, y: 36, h: 42, w: 42 },
   headerSubtitle: { x: 40, y: 88, h: 28, w: 28 },
   fieldLabelFont: { h: 28, w: 28 },
   fieldValue: {
+    nombre: { h: 36, w: 34, maxLines: 1 },
     obra: { h: 36, w: 34, maxLines: 2 },
-    medidas: { h: 74, w: 72, maxLines: 2 },
+    medidas: { h: 74, w: 72, maxLines: 1 },
     cantidad: { h: 88, w: 82, maxLines: 1 },
     composicion: { h: 46, w: 42, maxLines: 2 },
     mts2: { h: 44, w: 40, maxLines: 1 },
@@ -87,6 +88,11 @@ function getZplLayout(settings: LabelSettings) {
       w: scaleFont(BASE_LAYOUT.fieldLabelFont.w),
     },
     fieldValue: {
+      nombre: {
+        h: scaleFont(BASE_LAYOUT.fieldValue.nombre.h),
+        w: scaleFont(BASE_LAYOUT.fieldValue.nombre.w),
+        maxLines: BASE_LAYOUT.fieldValue.nombre.maxLines,
+      },
       obra: {
         h: scaleFont(BASE_LAYOUT.fieldValue.obra.h),
         w: scaleFont(BASE_LAYOUT.fieldValue.obra.w),
@@ -225,6 +231,7 @@ export function buildZplForLabel(
   companySettings: CompanySettings = getDefaultCompanySettings(),
 ): string {
   const layout = getZplLayout(settings)
+  const nombre = sanitizeZplText(label.nombre)
   const obra = sanitizeZplText(label.obra)
   const medidas = sanitizeZplText(label.medidas)
   const cantidad = sanitizeZplText(label.cantidad)
@@ -233,17 +240,17 @@ export function buildZplForLabel(
   const observaciones = sanitizeZplText(label.observaciones)
 
   if (layout.mode === 'compact') {
-    const nombre = sanitizeZplText(label.nombre)
     const hasNombre = nombre !== '-'
 
     const headerLines: string[] = []
     let compactOffset: number
 
     if (companySettings.showCompanyName && hasNombre) {
-      // Company name prominent (28pt, Y≥18 safe margin) + cliente debajo
+      // Company line plus a compact, labeled customer name row.
       headerLines.push(
-        `^FO${layout.leftMargin},18^A0N,28,26^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
-        `^FO${layout.leftMargin},52^A0N,18,17^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
+        `^FO${layout.leftMargin},14^A0N,28,26^FB${layout.contentWidth},1,2,L,0^FD${sanitizeZplText(companySettings.companyName)}^FS`,
+        `^FO${layout.leftMargin},46^A0N,16,15^FDNOMBRE^FS`,
+        `^FO${layout.leftMargin + 86},44^A0N,20,19^FB${layout.contentWidth - 86},1,2,L,0^FD${nombre}^FS`,
       )
       compactOffset = 64
     } else if (companySettings.showCompanyName) {
@@ -253,9 +260,10 @@ export function buildZplForLabel(
       compactOffset = 46
     } else if (hasNombre) {
       headerLines.push(
-        `^FO${layout.leftMargin},18^A0N,28,26^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
+        `^FO${layout.leftMargin},18^A0N,17,16^FDNOMBRE^FS`,
+        `^FO${layout.leftMargin},40^A0N,24,22^FB${layout.contentWidth},1,2,L,0^FD${nombre}^FS`,
       )
-      compactOffset = 46
+      compactOffset = 58
     } else {
       compactOffset = 0
     }
@@ -267,12 +275,12 @@ export function buildZplForLabel(
     const compactObs =
       observaciones.length > 28 ? `${observaciones.slice(0, 28)}...` : observaciones
 
-    // Full header (company + nombre, compactOffset=64): tighten OBS to fit 400 dots
-    const obsSepOffset = compactOffset >= 64 ? compactOffset - 6 : compactOffset
-    const obsLineOffset = compactOffset >= 64 ? compactOffset - 10 : compactOffset
-    const obsLabelFont = compactOffset >= 64 ? { h: 18, w: 17 } : { h: 22, w: 20 }
-    const obsValueFont = compactOffset >= 64 ? { h: 18, w: 17 } : { h: 24, w: 22 }
-    const obsMaxLines = compactOffset >= 64 ? 1 : 2
+    const hasCompactHeader = compactOffset >= 58
+    const obsSepOffset = hasCompactHeader ? compactOffset - 20 : compactOffset
+    const obsLineOffset = hasCompactHeader ? compactOffset - 26 : compactOffset
+    const obsLabelFont = hasCompactHeader ? { h: 18, w: 17 } : { h: 22, w: 20 }
+    const obsValueFont = hasCompactHeader ? { h: 18, w: 17 } : { h: 24, w: 22 }
+    const obsMaxLines = hasCompactHeader ? 1 : 2
 
     return [
       '^XA',
@@ -300,6 +308,16 @@ export function buildZplForLabel(
     ].join('\n')
   }
 
+  const standardFields = [
+    { title: 'NOMBRE', value: nombre, font: layout.fieldValue.nombre },
+    { title: 'OBRA', value: obra, font: layout.fieldValue.obra },
+    { title: 'MEDIDAS', value: medidas, font: layout.fieldValue.medidas },
+    { title: 'CANTIDAD', value: cantidad, font: layout.fieldValue.cantidad },
+    { title: 'COMPOSICION DVH', value: composicion, font: layout.fieldValue.composicion },
+    { title: 'MTS.2', value: mts2, font: layout.fieldValue.mts2 },
+    { title: 'OBSERVACIONES', value: observaciones, font: layout.fieldValue.observaciones },
+  ]
+
   return [
     '^XA',
     '^CI28',
@@ -312,138 +330,30 @@ export function buildZplForLabel(
       layout.headerTitle.y,
       showQR ? Math.max(220, layout.contentWidth - 128) : layout.contentWidth,
     ),
-    fieldSeparator(
-      layout.separatorY[0],
-      layout.separatorX,
-      layout.separatorWidth,
-      layout.separatorThickness,
-    ),
-    fieldLabel(
-      layout.leftMargin,
-      layout.labelY[0],
-      'OBRA',
-      layout.fieldLabelFont.h,
-      layout.fieldLabelFont.w,
-    ),
-    fieldValue(
-      layout.leftMargin,
-      layout.contentWidth,
-      layout.valueY[0],
-      obra,
-      layout.fieldValue.obra.h,
-      layout.fieldValue.obra.w,
-      layout.fieldValue.obra.maxLines,
-    ),
-    fieldSeparator(
-      layout.separatorY[1],
-      layout.separatorX,
-      layout.separatorWidth,
-      layout.separatorThickness,
-    ),
-    fieldLabel(
-      layout.leftMargin,
-      layout.labelY[1],
-      'MEDIDAS',
-      layout.fieldLabelFont.h,
-      layout.fieldLabelFont.w,
-    ),
-    fieldValue(
-      layout.leftMargin,
-      layout.contentWidth,
-      layout.valueY[1],
-      medidas,
-      layout.fieldValue.medidas.h,
-      layout.fieldValue.medidas.w,
-      layout.fieldValue.medidas.maxLines,
-    ),
-    fieldSeparator(
-      layout.separatorY[2],
-      layout.separatorX,
-      layout.separatorWidth,
-      layout.separatorThickness,
-    ),
-    fieldLabel(
-      layout.leftMargin,
-      layout.labelY[2],
-      'CANTIDAD',
-      layout.fieldLabelFont.h,
-      layout.fieldLabelFont.w,
-    ),
-    fieldValue(
-      layout.leftMargin,
-      layout.contentWidth,
-      layout.valueY[2],
-      cantidad,
-      layout.fieldValue.cantidad.h,
-      layout.fieldValue.cantidad.w,
-      layout.fieldValue.cantidad.maxLines,
-    ),
-    fieldSeparator(
-      layout.separatorY[3],
-      layout.separatorX,
-      layout.separatorWidth,
-      layout.separatorThickness,
-    ),
-    fieldLabel(
-      layout.leftMargin,
-      layout.labelY[3],
-      'COMPOSICION DVH',
-      layout.fieldLabelFont.h,
-      layout.fieldLabelFont.w,
-    ),
-    fieldValue(
-      layout.leftMargin,
-      layout.contentWidth,
-      layout.valueY[3],
-      composicion,
-      layout.fieldValue.composicion.h,
-      layout.fieldValue.composicion.w,
-      layout.fieldValue.composicion.maxLines,
-    ),
-    fieldSeparator(
-      layout.separatorY[4],
-      layout.separatorX,
-      layout.separatorWidth,
-      layout.separatorThickness,
-    ),
-    fieldLabel(
-      layout.leftMargin,
-      layout.labelY[4],
-      'MTS.2',
-      layout.fieldLabelFont.h,
-      layout.fieldLabelFont.w,
-    ),
-    fieldValue(
-      layout.leftMargin,
-      layout.contentWidth,
-      layout.valueY[4],
-      mts2,
-      layout.fieldValue.mts2.h,
-      layout.fieldValue.mts2.w,
-      layout.fieldValue.mts2.maxLines,
-    ),
-    fieldSeparator(
-      layout.separatorY[5],
-      layout.separatorX,
-      layout.separatorWidth,
-      layout.separatorThickness,
-    ),
-    fieldLabel(
-      layout.leftMargin,
-      layout.labelY[5],
-      'OBSERVACIONES',
-      layout.fieldLabelFont.h,
-      layout.fieldLabelFont.w,
-    ),
-    fieldValue(
-      layout.leftMargin,
-      layout.contentWidth,
-      layout.valueY[5],
-      observaciones,
-      layout.fieldValue.observaciones.h,
-      layout.fieldValue.observaciones.w,
-      layout.fieldValue.observaciones.maxLines,
-    ),
+    ...standardFields.flatMap((field, index) => [
+      fieldSeparator(
+        layout.separatorY[index],
+        layout.separatorX,
+        layout.separatorWidth,
+        layout.separatorThickness,
+      ),
+      fieldLabel(
+        layout.leftMargin,
+        layout.labelY[index],
+        field.title,
+        layout.fieldLabelFont.h,
+        layout.fieldLabelFont.w,
+      ),
+      fieldValue(
+        layout.leftMargin,
+        layout.contentWidth,
+        layout.valueY[index],
+        field.value,
+        field.font.h,
+        field.font.w,
+        field.font.maxLines,
+      ),
+    ]),
     ...(showQR ? buildZplQRLines(label, layout.widthDots, layout.headerTitle.y, settings.dpi) : []),
     '^XZ',
   ].join('\n')
