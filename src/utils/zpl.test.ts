@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeZplText, buildZplForLabel, buildZplForLabels } from './zpl'
+import { sanitizeZplText, buildZplForLabel, buildZplForLabels, getPrintQuantity } from './zpl'
 import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
 import { getDefaultCompanySettings } from './companySettings'
 import { sampleLabel } from '../test/fixtures/sampleLabels'
@@ -151,11 +151,28 @@ describe('buildZplForLabel', () => {
 })
 
 describe('buildZplForLabels', () => {
+  it('calcula una etiqueta cuando el modo es single', () => {
+    expect(getPrintQuantity({ ...sampleLabel, cantidad: '40' }, 'single')).toBe(1)
+  })
+
   it('genera tantas etiquetas como indique cantidad', () => {
     const zpl = buildZplForLabels([{ ...sampleLabel, cantidad: '4' }], DEFAULT_LABEL_SETTINGS)
 
     expect(zpl.match(/\^XA/g) ?? []).toHaveLength(4)
     expect(zpl.match(/\^XZ/g) ?? []).toHaveLength(4)
+  })
+
+  it('genera una etiqueta por vidrio cuando el modo es single', () => {
+    const zpl = buildZplForLabels(
+      [{ ...sampleLabel, cantidad: '4' }],
+      DEFAULT_LABEL_SETTINGS,
+      false,
+      undefined,
+      'single',
+    )
+
+    expect(zpl.match(/\^XA/g) ?? []).toHaveLength(1)
+    expect(zpl.match(/\^XZ/g) ?? []).toHaveLength(1)
   })
 
   it('usa una etiqueta cuando cantidad no es valida', () => {

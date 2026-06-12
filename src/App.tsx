@@ -10,21 +10,11 @@ import { SheetSelector } from './components/SheetSelector'
 import { Toolbar } from './components/Toolbar'
 import { UploadPanel } from './components/UploadPanel'
 import { parseWorkbookFile } from './lib/excelParser'
-import type { AppMessage, CompanySettings, ImportSummary, LabelModel, LabelPresetId, LabelSettings, PrintScope } from './types'
+import type { AppMessage, CompanySettings, ImportSummary, LabelModel, LabelPresetId, LabelSettings, PrintQuantityMode, PrintScope } from './types'
 import { loadCompanySettings, saveCompanySettings, validateLogoFile } from './utils/companySettings'
 import { DEFAULT_LABEL_SETTINGS, getLabelPresetById, LABEL_PRESETS } from './utils/labelSettings'
-import { buildZplForLabels } from './utils/zpl'
+import { buildZplForLabels, getPrintQuantity } from './utils/zpl'
 import { sendZplToZebra } from './utils/zebraBrowserPrint'
-
-function getLabelPrintQuantity(label: LabelModel): number {
-  const quantity = Number.parseInt(label.cantidad, 10)
-
-  if (!Number.isFinite(quantity) || quantity <= 0) {
-    return 1
-  }
-
-  return quantity
-}
 
 function App() {
   const [labels, setLabels] = useState<LabelModel[]>([])
@@ -39,6 +29,8 @@ function App() {
   const [selectedPresetId, setSelectedPresetId] =
     useState<LabelPresetId>(DEFAULT_LABEL_SETTINGS.id)
   const [showQR, setShowQR] = useState(false)
+  const [printQuantityMode, setPrintQuantityMode] =
+    useState<PrintQuantityMode>('quantity')
   const [companySettings, setCompanySettings] =
     useState<CompanySettings>(() => loadCompanySettings())
   const [companySettingsError, setCompanySettingsError] = useState<string | null>(null)
@@ -73,13 +65,17 @@ function App() {
     () =>
       labels
         .filter((label) => label.selected)
-        .reduce((total, label) => total + getLabelPrintQuantity(label), 0),
-    [labels],
+        .reduce((total, label) => total + getPrintQuantity(label, printQuantityMode), 0),
+    [labels, printQuantityMode],
   )
 
   const totalPrintCount = useMemo(
-    () => labels.reduce((total, label) => total + getLabelPrintQuantity(label), 0),
-    [labels],
+    () =>
+      labels.reduce(
+        (total, label) => total + getPrintQuantity(label, printQuantityMode),
+        0,
+      ),
+    [labels, printQuantityMode],
   )
 
   const loadWorkbookSheet = async (file: File, sheetName?: string) => {
@@ -170,7 +166,13 @@ function App() {
     }
 
     setErrorMessage(null)
-    return buildZplForLabels(scopedLabels, labelSettings, showQR, companySettings)
+    return buildZplForLabels(
+      scopedLabels,
+      labelSettings,
+      showQR,
+      companySettings,
+      printQuantityMode,
+    )
   }
 
   const handleCompanySettingsChange = (nextSettings: CompanySettings) => {
@@ -330,6 +332,8 @@ function App() {
           selectedCount={selectedCount}
           settingsSummary={settingsSummary}
           showQR={showQR}
+          printQuantityMode={printQuantityMode}
+          onChangePrintQuantityMode={setPrintQuantityMode}
           onToggleQR={() => setShowQR((v) => !v)}
           onSelectAll={() => setAllSelections(true)}
           onClearSelection={() => setAllSelections(false)}

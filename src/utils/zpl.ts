@@ -1,4 +1,4 @@
-import type { CompanySettings, LabelModel, LabelSettings } from '../types'
+import type { CompanySettings, LabelModel, LabelSettings, PrintQuantityMode } from '../types'
 import { getDefaultCompanySettings } from './companySettings'
 import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
 import { buildQRData } from './qrGenerator'
@@ -214,7 +214,11 @@ function buildStandardBrandingLines(
 }
 
 
-function getPrintQuantity(label: LabelModel): number {
+export function getPrintQuantity(label: LabelModel, quantityMode: PrintQuantityMode = 'quantity'): number {
+  if (quantityMode === 'single') {
+    return 1
+  }
+
   const quantity = Number.parseInt(label.cantidad, 10)
 
   if (!Number.isFinite(quantity) || quantity <= 0) {
@@ -364,10 +368,11 @@ export function buildZplForLabels(
   settings: LabelSettings = DEFAULT_LABEL_SETTINGS,
   showQR = false,
   companySettings: CompanySettings = getDefaultCompanySettings(),
+  quantityMode: PrintQuantityMode = 'quantity',
 ): string {
   return labels
     .flatMap((label) =>
-      Array.from({ length: getPrintQuantity(label) }, () =>
+      Array.from({ length: getPrintQuantity(label, quantityMode) }, () =>
         buildZplForLabel(label, settings, showQR, companySettings),
       ),
     )
