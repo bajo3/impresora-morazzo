@@ -15,7 +15,7 @@ export function LabelPresetSelector({
     <div className="preset-selector no-print">
       <div className="preset-selector__copy">
         <h2>2. Formato de etiqueta</h2>
-        <p>Usa uno de los dos tamaños fijos preparados para el rollo.</p>
+        <p>Usa uno de los tamaños fijos preparados para el rollo.</p>
       </div>
 
       <div className="preset-selector__actions">

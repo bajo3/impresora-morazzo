@@ -66,7 +66,7 @@ export interface ParseWorkbookSuccess {
 
 export type PrintScope = 'all' | 'selected'
 export type PrintQuantityMode = 'quantity' | 'single'
-export type LabelPresetId = '100x150' | '80x50'
+export type LabelPresetId = '100x150' | '100x100' | '80x50'
 
 export interface LabelSettings {
   id: LabelPresetId

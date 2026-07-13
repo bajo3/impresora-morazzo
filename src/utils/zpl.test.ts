@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { sanitizeZplText, buildZplForLabel, buildZplForLabels, getPrintQuantity } from './zpl'
-import { DEFAULT_LABEL_SETTINGS } from './labelSettings'
+import { DEFAULT_LABEL_SETTINGS, getLabelPresetById } from './labelSettings'
 import { getDefaultCompanySettings } from './companySettings'
 import { sampleLabel } from '../test/fixtures/sampleLabels'
 
@@ -147,6 +147,23 @@ describe('buildZplForLabel', () => {
     const zpl = buildZplForLabel(sampleLabel, DEFAULT_LABEL_SETTINGS)
     // 100mm * 203/25.4 ≈ 799 dots
     expect(zpl).toMatch(/\^PW7[89]\d/)
+  })
+
+  it('usa el layout standard para el preset 100x100', () => {
+    const settings = getLabelPresetById('100x100')
+    const zpl = buildZplForLabel(sampleLabel, settings)
+    // Mismo ancho que 100x150 (100mm ≈ 799 dots) y alto ≈ 799 dots (100mm)
+    expect(zpl).toMatch(/\^PW7[89]\d/)
+    expect(zpl).toMatch(/\^LL7[89]\d/)
+    // Layout standard: incluye los campos completos, no el modo compact
+    expect(zpl).toContain('COMPOSICION DVH')
+    expect(zpl).toContain('Cliente Test')
+  })
+
+  it('incluye ^BQ cuando showQR es true en preset 100x100', () => {
+    const zpl = buildZplForLabel(sampleLabel, getLabelPresetById('100x100'), true)
+    expect(zpl).toContain('^BQN,2,')
+    expect(zpl).toContain('^FDQA,')
   })
 })
 
