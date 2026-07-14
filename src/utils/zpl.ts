@@ -289,6 +289,7 @@ export function buildZplForLabel(
     return [
       '^XA',
       '^CI28',
+      '^MTD',
       `^PW${layout.widthDots}`,
       `^LL${layout.heightDots}`,
       '^LH0,0',
