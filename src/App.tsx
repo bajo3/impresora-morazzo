@@ -159,7 +159,10 @@ function App() {
     return selectedLabels
   }
 
-  const buildZplForScope = (scope: PrintScope): string | null => {
+  const buildZplForScope = (
+    scope: PrintScope,
+    hideCompanyName = false,
+  ): string | null => {
     const scopedLabels = resolveLabelsForScope(scope)
     if (!scopedLabels) {
       return null
@@ -170,7 +173,9 @@ function App() {
       scopedLabels,
       labelSettings,
       showQR,
-      companySettings,
+      hideCompanyName
+        ? { ...companySettings, showCompanyName: false }
+        : companySettings,
       printQuantityMode,
     )
   }
@@ -247,8 +252,11 @@ function App() {
     }
   }
 
-  const printWithZebra = async (scope: PrintScope) => {
-    const zpl = buildZplForScope(scope)
+  const printWithZebra = async (
+    scope: PrintScope,
+    hideCompanyName = false,
+  ) => {
+    const zpl = buildZplForScope(scope, hideCompanyName)
     if (!zpl) {
       return
     }
@@ -339,6 +347,9 @@ function App() {
           onClearSelection={() => setAllSelections(false)}
           onPrintAllWithZebra={() => void printWithZebra('all')}
           onPrintSelectedWithZebra={() => void printWithZebra('selected')}
+          onPrintSelectedWithoutCompanyName={() =>
+            void printWithZebra('selected', true)
+          }
           onDownloadAllZpl={() => downloadZpl('all')}
           onDownloadSelectedZpl={() => downloadZpl('selected')}
           onCopyAllZpl={() => void copyZpl('all')}

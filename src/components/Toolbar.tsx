@@ -13,6 +13,7 @@ interface ToolbarProps {
   onClearSelection: () => void
   onPrintAllWithZebra: () => void
   onPrintSelectedWithZebra: () => void
+  onPrintSelectedWithoutCompanyName: () => void
   onDownloadAllZpl: () => void
   onDownloadSelectedZpl: () => void
   onCopyAllZpl: () => void
@@ -32,6 +33,7 @@ export function Toolbar({
   onClearSelection,
   onPrintAllWithZebra,
   onPrintSelectedWithZebra,
+  onPrintSelectedWithoutCompanyName,
   onDownloadAllZpl,
   onDownloadSelectedZpl,
   onCopyAllZpl,
@@ -104,6 +106,14 @@ export function Toolbar({
           disabled={!hasLabels}
         >
           Imprimir seleccionadas con Zebra
+        </button>
+        <button
+          type="button"
+          className="toolbar__button toolbar__button--secondary"
+          onClick={onPrintSelectedWithoutCompanyName}
+          disabled={!hasLabels}
+        >
+          Imprimir seleccionadas sin Facundo Morazzo
         </button>
         <button
           type="button"
